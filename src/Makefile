@@ -1,8 +1,9 @@
 #CROSS		 = arm-linux-gnueabihf-
 CROSS		 =
 CC		 = $(CROSS)gcc
-CFLAGS		 = -O0 -I. $(shell sdl-config --cflags --libs) -lSDL_image -lcurl -lpthread
-OBJS		 = main.o googlemap_api.o retrieve.o
+CFLAGS		 = -I. -I./nmealib/include/ -L./nmealib/lib/ $(shell sdl-config --cflags --libs) -lSDL_image -lcurl -lpthread -lm -lnmea
+CFLAGS		+= -Os
+OBJS		 = main.o googlemap_api.o retrieve.o gps.o
 TARGET		 = maptracer
 UNZIP		 = unzip
 NMEALIB		 = ./nmealib/lib/libnmea.a
@@ -11,7 +12,7 @@ NMEALIBZIP	 = ./nmealib-0.5.3.zip
 
 .PHONY: clean purge all
 
-all:	$(TARGET)
+all: $(TARGET)
 
 .c.o:
 	@echo "========================================================"
@@ -21,12 +22,12 @@ $(NMEALIB):
 	$(UNZIP) $(NMEALIBZIP)
 	make -C $(NMEALIBDIR)
 
-$(TARGET): $(OBJS) $(NMEALIB)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+$(TARGET): $(NMEALIB) $(OBJS)
+	$(CC) -o $@ $(OBJS) $(CFLAGS)
 
 clean:
 	@echo "Clean project =========================================="
-	rm -fr *.bak $(TARGET) $(OBJS) ./nmealib
+	rm -fr $(TARGET) $(OBJS) ./nmealib
 
 purge:
 	rm -f *~ *bak
