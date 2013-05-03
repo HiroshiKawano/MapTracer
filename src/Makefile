@@ -2,7 +2,7 @@
 CROSS		 =
 CC		 = $(CROSS)gcc
 CFLAGS		 = -I. -I./nmealib/include/ -L./nmealib/lib/ $(shell sdl-config --cflags --libs) -lSDL_image -lcurl -lpthread -lm -lnmea
-CFLAGS		+= -Os
+CFLAGS		+= -Os -g
 OBJS		 = main.o googlemap_api.o retrieve.o gps.o gui.o
 TARGET		 = maptracer
 UNZIP		 = unzip

@@ -31,8 +31,8 @@ int main(int argc,char** argv)
     }
 
     gui_open();
-    pthread_create(&gps_thread,NULL,gps_receiver_thread,NULL);
 
+    pthread_create(&gps_thread,NULL,gps_receiver_thread,NULL);
     pthread_join(gps_thread);
 
     gui_close();
@@ -40,9 +40,10 @@ int main(int argc,char** argv)
 
 void http_callback(void* buff,int len)
 {
-    //printf("%s\n",__func__);
+  //printf("%s Len=%d\n",__func__,len);
 
-    showPngFileOnMemory_FullScreen(buff,len);
+  showPngFileOnMemory_FullScreen(buff,len);
+  usleep(500000);
 }
 
 void gps_callback(double lat,double lon)
@@ -69,7 +70,6 @@ void gps_receiver_thread(void* arg)
     param.callback = gps_callback;
 
     gpsRetriever("/dev/ttyUSB0",&param);
-
 }
 
 void usage(void)
