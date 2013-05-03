@@ -26,8 +26,7 @@ bool createUrl_FromLatLon(double lat,double lon,unsigned char* api_key,unsigned 
     }
 
     sprintf(url,
-	    "http://maps.googleapis.com/maps/api/staticmap"
-	    "?center=%f,%f&zoom=%f&size=%dx%d&sensor=%s&key=%s",
+	    "http://maps.googleapis.com/maps/api/staticmap?center=%f,%f&zoom=%d&size=%dx%d&sensor=%s&key=%s",
 	    lat,
 	    lon,
 	    zoom,

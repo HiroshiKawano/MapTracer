@@ -78,7 +78,7 @@ static size_t retriever_header_callback(char* ptr,size_t size,size_t nmemb,void*
 }
 
 
-bool http_retrieve(unsigned char* url)
+bool http_retrieve(unsigned char* url,bool (*callback)(void* buff,int len))
 {
     CURL *curl;
     CURLcode res;
@@ -99,10 +99,11 @@ bool http_retrieve(unsigned char* url)
 		    curl_easy_strerror(res));
 	} else {
 
+	  (*callback)(content_buffer,current_content_size);
 #if 0
 	    {
 		FILE* f;
-		f = fopen("out.png","wb");
+		f = fopen("for_debug.png","wb");
 		fwrite(content_buffer,current_content_size,1,f);
 		fclose(f);
 	    }

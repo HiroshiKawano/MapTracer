@@ -1,3 +1,11 @@
+/*
+  Simple map tracer for RaspberryPi
+  Version 5/1/2013
+
+  Coded by Yasuhiro ISHII
+  This code is distributed under Apache2.0 license
+*/
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/types.h>
@@ -10,10 +18,12 @@
 #include <math.h>
 
 #include <nmea/nmea.h>
+#include "gps.h"
 
 //#define DEBUG
 
 double convert_radian_to_degree(double rad);
+bool gpsRetriever(char* interface,struct gps_params* params);
 
 void trace(const char *str, int str_size)
 {
@@ -70,7 +80,7 @@ int set_interface_attribs (int fd, int speed)
 int flag = 0;
 #endif
 
-bool gpsRetriever(char* interface)
+bool gpsRetriever(char* interface,struct gps_params* params)
 {
     int fd;
     int result;
@@ -109,7 +119,11 @@ bool gpsRetriever(char* interface)
 	    
 	    nmea_parse(&parser, &buff[0], result, &info);
 	    nmea_info2pos(&info, &dpos);
+
+	    params->callback(convert_radian_to_degree(dpos.lat),
+			     convert_radian_to_degree(dpos.lon));
 	    
+#ifdef DEBUG
 	    printf(
 		"%03d, Pos( %lf,%lf ), Sig: %d, Fix: %d, Elv : %lf Dir :%lf,Sat inview : %d,Sat inuse : %d\n",
 		it++,
@@ -122,8 +136,9 @@ bool gpsRetriever(char* interface)
 		info.satinfo.inview,
 		info.satinfo.inuse
 		);
+#endif
 	}
-	
+	sleep(1);
     }
     
     nmea_parser_destroy(&parser);
