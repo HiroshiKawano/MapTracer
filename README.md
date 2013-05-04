@@ -41,7 +41,7 @@ This program needs some options to launch,just execute like "./MapTracer" and yo
 
 >Specify CVBS(Composite video output) resolution mode
 
->If you launch MapTracer without specifying -c with CVBS connection,the program is crashed soon(happens internally SDL-library).This is ToDo to fix to detect automatically whether the video connection is HDMI or not,or maybe fixed in later's Raspbian "wheezy" release(in SDL?).
+>If you launch MapTracer without specifying -c with CVBS connection,the program will be crashed soon(happens internally SDL-library).This is ToDo to fix to detect automatically whether the video connection is HDMI or not,or maybe fixed in later's Raspbian "wheezy" release(in SDL?).
 
 *-n*
 
