@@ -13,6 +13,9 @@ struct gps_params {
   void (*callback)(double lat,double lon);
 };
 
-extern bool gpsRetriever(char* interface,struct gps_params* params);
+extern bool gpsStartRetriever(struct gps_params* params);
+extern bool gpsStopRetriever(void);
+extern bool gpsOpen(char* interface);
+extern bool gpsClose(void);
 
 #endif /* __GPS_H__ */

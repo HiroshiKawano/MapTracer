@@ -16,14 +16,21 @@
 #include <termios.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
 
 #include <nmea/nmea.h>
 #include "gps.h"
 
-//#define DEBUG
+#define DEBUG
 
-double convert_radian_to_degree(double rad);
-bool gpsRetriever(char* interface,struct gps_params* params);
+static double convert_radian_to_degree(double rad);
+
+static pthread_mutex_t gps_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool gps_retrieve_loop = false;
+
+bool gpsStartRetriever(struct gps_params* params);
+
+
 
 void trace(const char *str, int str_size)
 {
@@ -76,32 +83,71 @@ int set_interface_attribs (int fd, int speed)
     return 0;
 }
 
+static nmeaINFO info;
+static nmeaPARSER parser;
+static int tty_fd = 0;
+
+bool gpsOpen(char* interface)
+{
+    bool ret = false;
+
+    if(tty_fd == 0){
+	tty_fd = open(interface,O_RDWR | O_NOCTTY | /*O_NONBLOCK */O_NDELAY );
+	set_interface_attribs(tty_fd,B4800);
+	nmea_property()->trace_func = &trace;
+	nmea_property()->error_func = &trace;
+	nmea_zero_INFO(&info);
+	nmea_parser_init(&parser);
+	ret = true;
+    }
+    return ret;
+}
+
+bool gpsClose()
+{
+    bool ret = false;
+
+    if(tty_fd != 0){
+	nmea_parser_destroy(&parser);
+	close(tty_fd);
+	tty_fd = 0;
+	ret = true;
+    }
+
+    return ret;
+}
+
 #ifdef DEBUG
 int flag = 0;
 #endif
 
-bool gpsRetriever(char* interface,struct gps_params* params)
+
+
+bool gpsStartRetriever(struct gps_params* params)
 {
-    int fd;
     int result;
     unsigned char buff[4096];
-    nmeaINFO info;
-    nmeaPARSER parser;
     nmeaPOS dpos;
     int it = 0;
-    
-    fd = open(interface,O_RDWR | O_NOCTTY | /*O_NONBLOCK */O_NDELAY );
-    
-    set_interface_attribs(fd,B4800);
-    
-    nmea_property()->trace_func = &trace;
-    nmea_property()->error_func = &trace;
-    nmea_zero_INFO(&info);
-    nmea_parser_init(&parser);
-    
-    while(1){
+    bool loop;
+
+    if(tty_fd == 0){
+	printf("gps is not initialized");
+	return(false);
+    }
+
+    pthread_mutex_lock(&gps_mutex);
+    gps_retrieve_loop = true;
+    pthread_mutex_unlock(&gps_mutex);
+    loop = true;
+
+    while(loop){
+
+	pthread_mutex_lock(&gps_mutex);
+	loop = gps_retrieve_loop;
+	pthread_mutex_unlock(&gps_mutex);
 	
-	result = read(fd,buff,sizeof(buff));
+	result = read(tty_fd,buff,sizeof(buff));
 	
 	if(result > 0){
 	    buff[result] = 0;
@@ -141,11 +187,18 @@ bool gpsRetriever(char* interface,struct gps_params* params)
 	sleep(1);
     }
     
-    nmea_parser_destroy(&parser);
-    close(fd);
 }
 
-double convert_radian_to_degree(double rad)
+bool gpsStopRetriever(void)
+{
+  pthread_mutex_lock(&gps_mutex);
+
+  gps_retrieve_loop = false;
+
+  pthread_mutex_unlock(&gps_mutex);
+}
+
+static double convert_radian_to_degree(double rad)
 {
     return (rad / (M_PI/180));
 }

@@ -54,7 +54,7 @@ static size_t retriever_write_callback(char* ptr,size_t size,size_t nmemb,void* 
 
 static size_t retriever_header_callback(char* ptr,size_t size,size_t nmemb,void* userdata)
 {
-    // Memo:
+    // yishii Memo:
     // parse header with alternatively allocated "buff" to handle it as like MS's _snscanf()
     
     char* buff = malloc(size*nmemb+1);

@@ -1,6 +1,6 @@
 /*
   Simple map tracer for RaspberryPi
-  Version 5/1/2013
+  Version 5/4/2013
 
   Coded by Yasuhiro ISHII
   This code is distributed under Apache2.0 license
@@ -14,44 +14,20 @@
 
 //#define DEBUG
 
-bool gui_open(void);
+bool gui_open(bool cvbs);
 bool gui_close(void);
 bool showPngFileOnMemory_FullScreen(void* pngdata,int size);
 bool showPngFile_FullScreen(unsigned char *filename);
 
-#if 0
-int main(void)
-{
-    FILE* fp;
-    unsigned char* buff;
-    int size;
-    
-    gui_open();
-    
-    buff=malloc(1024*1024);
-    
-    fp = fopen("../a.png","rb");
-    size=fread(buff,1,1024*1024,fp);
-    printf("file read:%d byte(s)\n",size);
-    fclose(fp);
-    
-    showPngFileOnMemory_FullScreen(buff,size);
-    
-    sleep(1);
-    
-    free(buff);
-    gui_close();
-    
-    return(0);
-}
-#endif
+static bool cvbs_resolution = false;
 
-bool gui_open(void)
+bool gui_open(bool cvbs)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0){
 	printf("SDL_Init failed (%s)\n",SDL_GetError());
 	return false;
     }
+    cvbs_resolution = cvbs;
     return true;
 }
 
@@ -71,7 +47,7 @@ bool showPngFileOnMemory_FullScreen(void* pngdata,int size)
     videoInfo = SDL_GetVideoInfo();
     if(videoInfo == 0){
 	printf("SDL_GetVideoInfo failed (%s)\n",SDL_GetError());
-    return(false);
+	return(false);
     }
     
     rw = SDL_RWFromMem(pngdata,size);
@@ -82,7 +58,18 @@ bool showPngFileOnMemory_FullScreen(void* pngdata,int size)
 	return(-1);
     }
   
-    screen = SDL_SetVideoMode(image->w,image->h,videoInfo->vfmt->BitsPerPixel,SDL_HWSURFACE);
+    if(cvbs_resolution == false){
+      screen = SDL_SetVideoMode(image->w,
+				image->h,
+				videoInfo->vfmt->BitsPerPixel,
+				SDL_HWSURFACE);
+    } else {
+      screen = SDL_SetVideoMode(image->w,
+				400,
+				videoInfo->vfmt->BitsPerPixel,
+				SDL_HWSURFACE);
+    }
+    
     if(!screen){
 	printf("SDL_SetVideoMode failed (%s)\n",SDL_GetError());
 	return(false);
@@ -122,4 +109,34 @@ bool showPngFile_FullScreen(unsigned char *filename)
     SDL_FreeSurface(image);
     
     return(true);
+}
+
+void gui_EventHandler(void)
+{
+    bool quit_loop = false;
+    SDL_Event event;
+
+    while(quit_loop == false){
+	SDL_WaitEvent(&event);
+	//printf("SDL Event = %d\n",event.type);
+	switch(event.type){
+	case SDL_QUIT:
+	    printf("SDL QUIT\n");
+	    quit_loop = true;
+	    break;
+	case SDL_KEYDOWN:
+	    printf("SDL_KEYDOWN key=%d\n",event.key.keysym.sym);
+	    switch(event.key.keysym.sym){
+	    case SDLK_0:
+		quit_loop = true;
+		break;
+	    default:
+		break;
+	    }
+	    break;
+	default:
+	    break;
+	}
+    }
+
 }
