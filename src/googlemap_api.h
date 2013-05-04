@@ -9,6 +9,7 @@
 #ifndef __GOOGLEMAP_API_H__
 #define __GOOGLEMAP_API_H__
 
-bool createUrl_FromLatLon(double,double,unsigned char*,unsigned char*);
+bool googlemaps_createUrl_FromLatLon(double lat,double lon,unsigned char* api_key,unsigned char* url);
+bool googlestreetview_createUrl_FromLatLon(double lat,double lon,int heading,unsigned char* api_key,unsigned char* url);
 
 #endif /* __GOOGLEMAP_API_H__ */

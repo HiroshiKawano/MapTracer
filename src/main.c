@@ -20,24 +20,26 @@ void gps_receiver_thread(void* arg);
 void gui_thread(void *arg);
 void usage(void);
 
+
 int main(int argc,char** argv)
 {
     pthread_t gps_th;
     pthread_t gui_th;
     int opt;
     bool cvbs_resolution = false;
+    bool demo_mode = false;
+    bool no_gui_mode = false;
     unsigned char tty_dev[64];
 
-    printf("MapTracer is launched\n");
-
-    if((argc == 2)||(argc == 3)){
+    if(argc == 1){
 	usage();
 	return -1;
     }
+    printf("MapTracer is launched\n");
 
     XInitThreads();
 
-    while((opt = getopt(argc,argv,"p:c")) != -1){
+    while((opt = getopt(argc,argv,"p:cnd")) != -1){
 	switch(opt){
 	case 'c':
 	    cvbs_resolution = true;
@@ -46,13 +48,21 @@ int main(int argc,char** argv)
 	case 'p':
 	    strcpy(tty_dev,optarg);
 	    break;
+	case 'n':
+	    printf("No GUI Mode(debug)\n");
+	    no_gui_mode = true;
+	    break;
+	case 'd':
+	    demo_mode = true;
+	    break;
 	default:
+	  usage();
 	    break;
 	}
     }
 
-    gpsOpen(tty_dev);
-    gui_open(cvbs_resolution);
+    gpsOpen(tty_dev,demo_mode);
+    gui_open(cvbs_resolution,no_gui_mode);
 
     pthread_create(&gps_th,NULL,gps_receiver_thread,NULL);
     pthread_create(&gui_th,NULL,gui_thread,NULL);
@@ -65,51 +75,21 @@ int main(int argc,char** argv)
 
 }
 
-void http_callback(void* buff,int len)
-{
-  //printf("%s Len=%d\n",__func__,len);
-
-  showPngFileOnMemory_FullScreen(buff,len);
-  usleep(500000);
-}
-
-void gps_callback(double lat,double lon)
-{
-    unsigned char url[1024];
-    bool result;
-
-#if 0
-    /* for test,below is the point that Osaka-station */
-    lat = 34.702385;
-    lon = 135.495195;
-#endif
-
-    result = createUrl_FromLatLon(lat,lon,GOOGLE_API_KEY,url);
-
-    if(result == true){
-	http_retrieve(url,http_callback);
-
-    } else {
-	printf("createUrl_FromLatLon failed\n");
-    }
-
-}
-
 void gui_thread(void *arg)
 {
     gui_EventHandler();
 
-    printf("Terminate gui thread");
+    printf("\nGUI THREAD TERMINATED\n");
 
     gpsStopRetriever();
 }
 
 void gps_receiver_thread(void* arg)
 {
-    struct gps_params param;
+    struct gps_callback_params param;
 
     memset(&param,0,sizeof(param));
-    param.callback = gps_callback;
+    param.callback = NULL;
 
     gpsStartRetriever(&param);
 }
@@ -120,5 +100,8 @@ void usage(void)
     printf(" Copyright(C) 2013 Yasuhiro ISHII\n\n");
     printf(" [option]\n");
     printf("  -c        : CVBS mode(low resolution mode)\n");
+    printf("  -n        : No GUI mode(for debug)\n");
+    printf("  -p [tty]  : Specify tty device\n");
+    printf("  -d        : DEMO Mode\n");
 }
 

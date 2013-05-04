@@ -11,7 +11,7 @@
 
 #define DEBUG
 
-bool createUrl_FromLatLon(double lat,double lon,unsigned char* api_key,unsigned char* url)
+bool googlemaps_createUrl_FromLatLon(double lat,double lon,unsigned char* api_key,unsigned char* url)
 {
     int zoom = 18;
     int size_x = 600;
@@ -33,6 +33,36 @@ bool createUrl_FromLatLon(double lat,double lon,unsigned char* api_key,unsigned 
 	    size_x,
 	    size_y,
 	    sensor == true ? "true" : "false",
+	    api_key);
+    
+#ifdef DEBUG
+    printf("%s :[%s]\n",__func__,url);
+#endif
+    
+    return(true);
+}
+
+bool googlestreetview_createUrl_FromLatLon(double lat,double lon,int heading,unsigned char* api_key,unsigned char* url)
+{
+    int size_x = 600;
+    int size_y = 600;
+    bool sensor = true;
+    
+    if(url == NULL){
+	return(false);
+    }
+    if(api_key == NULL){
+	return(false);
+    }
+
+    sprintf(url,
+	    "http://maps.googleapis.com/maps/api/streetview?size=%dx%d&location=%f,%f&sensor=%s&heading=%d&key=%s",
+	    size_x,
+	    size_y,
+	    lat,
+	    lon,
+	    sensor == true ? "true" : "false",
+	    heading,
 	    api_key);
     
 #ifdef DEBUG
