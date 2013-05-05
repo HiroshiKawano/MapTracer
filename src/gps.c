@@ -80,7 +80,7 @@ int set_interface_attribs (int fd, int speed)
     tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
     tty.c_cflag &= ~CSTOPB;
     tty.c_cflag &= ~CRTSCTS;
-    //tty.c_oflag = ;
+    tty.c_iflag = 0;
     tty.c_lflag = ICANON | IEXTEN | ECHOE | ECHOK | ECHOCTL | ECHOKE;
 
     if (tcsetattr (fd, TCSANOW, &tty) != 0){
