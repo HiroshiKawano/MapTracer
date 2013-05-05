@@ -26,6 +26,8 @@ static bool gui_DrawMaps(int mode);
 static void http_draw_callback_png(void* buff,int len);
 static void http_draw_callback_jpeg(void* buff,int len);
 
+static SDL_Surface* screen = NULL;
+
 static bool cvbs_resolution = false;
 static bool no_gui_mode = false;
 static bool demo_mode = false;
@@ -46,6 +48,25 @@ bool gui_open(bool cvbs,bool no_gui)
     cvbs_resolution = cvbs;
     no_gui_mode = no_gui;
 
+    SDL_VideoInfo* vinfo = SDL_GetVideoInfo();
+
+    if(cvbs_resolution == false){
+      screen = SDL_SetVideoMode(600,
+				600,
+				16,
+				SDL_HWSURFACE);
+    } else {
+      screen = SDL_SetVideoMode(600,
+				400,
+				16,
+				SDL_HWSURFACE);
+    }
+    
+    if(!screen){
+	printf("SDL_SetVideoMode failed (%s)\n",SDL_GetError());
+	return(false);
+    }
+
     return true;
 }
 
@@ -57,7 +78,6 @@ bool gui_close(void)
 
 bool showImageFileOnMemory_FullScreen(void* data,int size,int format)
 {
-    SDL_Surface* screen = NULL;
     SDL_Surface* image = NULL;
     SDL_RWops *rw;
     const SDL_VideoInfo *videoInfo = NULL;
@@ -90,22 +110,6 @@ bool showImageFileOnMemory_FullScreen(void* data,int size,int format)
 	return(-1);
     }
   
-    if(cvbs_resolution == false){
-      screen = SDL_SetVideoMode(image->w,
-				image->h,
-				videoInfo->vfmt->BitsPerPixel,
-				SDL_HWSURFACE);
-    } else {
-      screen = SDL_SetVideoMode(image->w,
-				400,
-				videoInfo->vfmt->BitsPerPixel,
-				SDL_HWSURFACE);
-    }
-    
-    if(!screen){
-	printf("SDL_SetVideoMode failed (%s)\n",SDL_GetError());
-	return(false);
-    }
     
     SDL_BlitSurface(image,0,screen,0);
     SDL_FreeSurface(image);
@@ -115,7 +119,6 @@ bool showImageFileOnMemory_FullScreen(void* data,int size,int format)
 
 bool showPngFile_FullScreen(unsigned char *filename)
 {
-    SDL_Surface* screen = NULL;
     SDL_Surface* image = NULL;
     const SDL_VideoInfo *videoInfo = NULL;
 
@@ -135,12 +138,6 @@ bool showPngFile_FullScreen(unsigned char *filename)
 	return(false);
     }
     
-    screen = SDL_SetVideoMode(image->w,image->h,videoInfo->vfmt->BitsPerPixel,SDL_HWSURFACE);
-    if(!screen){
-	printf("SDL_SetVideoMode failed (%s)\n",SDL_GetError());
-	return(false);
-    }
-  
     SDL_BlitSurface(image,0,screen,0);
     SDL_FreeSurface(image);
     
