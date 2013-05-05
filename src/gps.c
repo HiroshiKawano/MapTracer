@@ -60,26 +60,34 @@ int set_interface_attribs (int fd, int speed)
 	return -1;
     }
 
-    if(cfsetspeed (&tty, B4800) != 0){
+#if 0
+    if(cfsetospeed (&tty, speed) != 0){
 	printf("cfsetospeed returns error\n");
 	return(-1);
     }
+    if(cfsetispeed (&tty, B0) != 0){
+	printf("cfsetispeed returns error\n");
+	return(-1);
+    }
+#endif
 
-    tty.c_lflag = ICANON;		// use canonical mode
-    
+    tty.c_cc[VMIN]  = 100;
+    tty.c_cc[VTIME] = 2;
+
     tty.c_cflag = CS8;
-    tty.c_cc[VMIN]  = 10;		// read doesn't block
-    tty.c_cc[VTIME] = 10;		// 1 second(s) read timeout
-    tty.c_cflag |= (CLOCAL | CREAD);	// ignore modem controls,
+    tty.c_cflag |= speed;
+    tty.c_cflag |= (CLOCAL | CREAD);
     tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
     tty.c_cflag &= ~CSTOPB;
     tty.c_cflag &= ~CRTSCTS;
-    tty.c_oflag = 0;
+    //tty.c_oflag = ;
+    tty.c_lflag = ICANON | IEXTEN | ECHOE | ECHOK | ECHOCTL | ECHOKE;
 
     if (tcsetattr (fd, TCSANOW, &tty) != 0){
 	printf ("error %d from tcsetattr", errno);
 	return -1;
     }
+
     return 0;
 }
 
@@ -92,7 +100,7 @@ bool gpsOpen(char* interface,bool demo)
     bool ret = false;
 
     if(tty_fd == 0){
-	tty_fd = open(interface,O_RDWR | O_NOCTTY | O_NDELAY );
+	tty_fd = open(interface,O_RDWR | O_NOCTTY | O_NONBLOCK);
 	set_interface_attribs(tty_fd,B4800);
 	nmea_property()->trace_func = &trace;
 	nmea_property()->error_func = &trace;
@@ -162,7 +170,7 @@ bool gpsStartRetriever(struct gps_callback_params* params)
 		printf("\x1b[33m");
 		flag = 0;
 	    }
-	    //printf("%s",buff);
+	    printf("%s",buff);
 #endif /* DEBUG */
 	    
 	    nmea_parse(&parser, &buff[0], result, &info);

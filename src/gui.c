@@ -23,7 +23,8 @@ bool showImageFileOnMemory_FullScreen(void* data,int size,int format);
 bool showPngFile_FullScreen(unsigned char *filename);
 
 static bool gui_DrawMaps(int mode);
-static void http_draw_callback(void* buff,int len);
+static void http_draw_callback_png(void* buff,int len);
+static void http_draw_callback_jpeg(void* buff,int len);
 
 static bool cvbs_resolution = false;
 static bool no_gui_mode = false;
@@ -189,7 +190,7 @@ void gui_EventHandler(void)
 	       modify this code to check with clock_gettime(CLOCK_MONITONIC,)
 	    */
 	    usleep(500000);
-	    
+
 	    gui_DrawMaps(draw_mode);
 	}
     }
@@ -201,31 +202,52 @@ static bool gui_DrawMaps(int mode)
     struct gpsParams gps_param;
     bool result;
     unsigned char url[100];
+    int it = 0;
 
     gpsGetCurrentParams(&gps_param);
 
+    // There's no location data,return
+    if(gps_param.lat == 0){
+	printf(
+	    "No location! : %03d, Pos( %lf,%lf ), Sig: %d, Fix: %d, Elv : %lf Dir :%lf,Sat inview : %d,Sat inuse : %d\n",
+	    it++,
+	    gps_param.lat,
+	    gps_param.lon,
+	    gps_param.sig,
+	    gps_param.fix,
+	    gps_param.elv,
+	    gps_param.dir,
+	    gps_param.sat_inview,
+	    gps_param.sat_inuse
+	    );
+	return(false);
+    }
+
     if(mode == 0){
 	result = googlemaps_createUrl_FromLatLon(gps_param.lat,gps_param.lon,GOOGLE_API_KEY,url);
+	if(result == true){
+	    http_retrieve(url,http_draw_callback_png);
+	} else {
+	    printf("googlemaps_createUrl_FromLatLon failed\n");
+	}
     } else {
 	result = googlestreetview_createUrl_FromLatLon(gps_param.lat,gps_param.lon,(int)gps_param.dir,GOOGLE_API_KEY,url);
+	if(result == true){
+	    http_retrieve(url,http_draw_callback_jpeg);
+	} else {
+	    printf("googlestreetview_createUrl_FromLatLon failed\n");
+	}
     }
 
-    if(result == true){
-	http_retrieve(url,http_draw_callback);
-    } else {
-	printf("createUrl_FromLatLon failed\n");
-    }
 }
 
-void http_draw_callback(void* buff,int len)
+void http_draw_callback_png(void* buff,int len)
 {
-    // !!!!! temporarily implementation (about mode)
-    // TODO;Need to fix later!
+    showImageFileOnMemory_FullScreen(buff,len,ImageFormat_PNG);
+}
 
-    if(draw_mode == GUI_DRAWMODE_GOOGLEMAPS){
-	showImageFileOnMemory_FullScreen(buff,len,ImageFormat_PNG);
-    } else {
-	showImageFileOnMemory_FullScreen(buff,len,ImageFormat_JPEG);
-    }
+void http_draw_callback_jpeg(void* buff,int len)
+{
+    showImageFileOnMemory_FullScreen(buff,len,ImageFormat_JPEG);
 }
 
