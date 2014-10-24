@@ -1,7 +1,7 @@
 #CROSS		 = arm-linux-gnueabihf-
 CROSS		 =
 CC		 = $(CROSS)gcc
-CFLAGS		 = -I. -I./nmealib/include/ -L./nmealib/lib/ $(shell sdl-config --cflags --libs) -lSDL_image -lcurl -lpthread -lm -lnmea
+CFLAGS		 = -I. -I./nmealib/include/ -L./nmealib/lib/ $(shell sdl-config --cflags --libs) -lSDL_image -lcurl -lpthread -lm -lnmea -lX11
 CFLAGS		+= -Os -g
 OBJS		 = main.o googlemap_api.o retrieve.o gps.o gui.o
 TARGET		 = maptracer
